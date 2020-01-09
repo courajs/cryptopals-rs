@@ -82,14 +82,18 @@ lazy_static! {
 }
 
 fn calc_letter_freqs(s: &str) -> Option<HashMap<char, f64>> {
-    let mut counts: HashMap<char, usize> = FREQS.iter().map(|(c,_)| (*c, 0)).collect();
+    let mut counts: HashMap<char, usize> = HashMap::new();
 
     let mut total = 0;
     for c in s.to_ascii_lowercase().chars() {
-        if counts.contains_key(&c) {
-            total += 1;
-            let n = counts.get_mut(&c).unwrap();
+        if !FREQS.contains_key(&c) {
+            continue;
+        }
+        total += 1;
+        if let Some(n) = counts.get_mut(&c) {
             *n += 1;
+        } else {
+            counts.insert(c, 1);
         }
     }
 
@@ -117,14 +121,21 @@ fn mean_square(i: impl Iterator<Item = f64>) -> Option<f64> {
 fn score_text(s: &str) -> Option<f64> {
     calc_letter_freqs(s).and_then(|freqs| {
         mean_square(FREQS.iter().map(|(c, freq)| {
-            let n = freqs.get(c).unwrap() - freq;
-            n*n
+            if let Some(n) = freqs.get(&c) {
+                (n-freq)*(n-freq)
+            } else {
+                freq*freq
+            }
         }))
     })
 }
 
 fn byte_xor(s: &[u8], b: u8) -> Vec<u8> {
     s.iter().map(|c| c ^ b).collect()
+}
+
+fn best_score_byte_xor(s: &[u8]) -> String {
+    todo!()
 }
 
 #[cfg(test)]
@@ -157,25 +168,17 @@ mod tests {
             println!("{}: {}", results[i].0, results[i].1);
         }
 
-        todo!()
+        // todo!()
     }
 
     #[test]
     fn test_tally() {
         let input = "aaaabbcd";
         let expected: HashMap<char, f64> = [
-            ('A', 0.5),
-            ('B', 0.25),
-            ('C', 0.125),
-            ('D', 0.125),
-            ('E', 0.0), ('T', 0.0), ('O', 0.0),
-            ('I', 0.0), ('N', 0.0), ('S', 0.0),
-            ('R', 0.0), ('H', 0.0), ('L', 0.0),
-            ('U', 0.0), ('M', 0.0), ('F', 0.0),
-            ('P', 0.0), ('G', 0.0), ('W', 0.0),
-            ('Y', 0.0), ('V', 0.0), ('K', 0.0),
-            ('X', 0.0), ('J', 0.0), ('Q', 0.0),
-            ('Z', 0.0),
+            ('a', 0.5),
+            ('b', 0.25),
+            ('c', 0.125),
+            ('d', 0.125),
         ].iter().cloned().collect();
 
         assert_eq!(expected, calc_letter_freqs(&input).unwrap());
