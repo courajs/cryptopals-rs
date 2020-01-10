@@ -1,49 +1,27 @@
-fn hamming(a: &[u8], b: &[u8]) -> u32 {
+use ordered_float::OrderedFloat;
+
+fn hamming(a: &[u8], b: &[u8]) -> usize {
     if a.len() != b.len() {
         panic!("strings must be same length to compute edit distance");
     }
     let mut result = 0;
     for i in 0..a.len() {
-        result += (a[i] ^ b[i]).count_ones();
+        result += (a[i] ^ b[i]).count_ones() as usize;
     }
     result
 }
 
-fn rank_keysizes(bytes: &[u8]) -> Vec<u32> {
+fn rank_keysizes(bytes: &[u8]) -> Vec<usize> {
     let max = std::cmp::min(40, bytes.len() / 2);
-    let mut result = Vec::with_capacity(max - 1);
-    for i in 2u32..=(max as u32) {
-        let score = normalized_hamming_for_keysize(bytes, i);
-        if let Some(g) = GoodFloat::new(score) {
-            result.push((i, g));
-        }
-    }
-
-    result.sort_by_key(|(_,score)| *score);
-
-    result.into_iter().map(|(keysize,_)| keysize).collect()
+    let mut result: Vec<usize> = (2usize..=max).collect();
+    result.sort_by_cached_key(|keysize| {
+        OrderedFloat(normalized_hamming_for_keysize(bytes, *keysize as usize))
+    });
+    result
 }
 
-#[derive(Debug,PartialEq,Eq,Clone,Copy,PartialOrd)]
-pub struct GoodFloat(f64);
-impl GoodFloat {
-    pub fn new(n: f64) -> Option<GoodFloat> {
-        if n.is_nan() {
-            None
-        } else {
-            Some(GoodFloat(n))
-        }
-    }
-}
-
-impl Ord for GoodFloat {
-    fn cmp(&self, other: &GoodFloat) -> std::cmp::Ordering {
-        self.0.partial_cmp(other.0).unwrap()
-    }
- }
-
-fn normalized_hamming_for_keysize(bytes: &[u8], keysize: u32) -> f64 {
-    let dist = hamming(bytes[..keysize], bytes[keysize..keysize*2]);
+fn normalized_hamming_for_keysize(bytes: &[u8], keysize: usize) -> f64 {
+    let dist = hamming(&bytes[..keysize], &bytes[keysize..keysize*2]);
     dist as f64 / keysize as f64
 }
 
