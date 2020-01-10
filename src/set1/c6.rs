@@ -36,6 +36,23 @@ fn collate(bytes: &[u8], n: usize) -> Vec<Vec<u8>> {
     result
 }
 
+fn interleave(input: &[Vec<u8>]) -> Vec<u8> {
+    let mut result = Vec::with_capacity(input.len() * (input[0].len()+1));
+    let mut iters: Vec<std::slice::Iter<u8>> = input.iter().map(|v| v.iter()).collect();
+
+    'outer: loop {
+        for i in 0..input.len() {
+            if let Some(b) = iters[i].next() {
+                result.push(*b);
+            } else {
+                break 'outer;
+            }
+        }
+    }
+
+    result
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -70,5 +87,19 @@ mod tests {
             b" !"[..].into(),
         ];
         assert_eq!(collate(input, 6), expected);
+    }
+
+    #[test]
+    fn test_interleave() {
+        let expected = b"hello world!!!";
+        let input: Vec<Vec<u8>> = vec![
+            b"hw!"[..].into(),
+            b"eo!"[..].into(),
+            b"lr"[..].into(),
+            b"ll"[..].into(),
+            b"od"[..].into(),
+            b" !"[..].into(),
+        ];
+        assert_eq!(interleave(&input), expected);
     }
 }
