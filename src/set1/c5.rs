@@ -1,5 +1,5 @@
 
-fn repeating_key_xor(bytes: &[u8], key: &[u8]) -> Vec<u8> {
+pub fn repeating_key_xor(bytes: &[u8], key: &[u8]) -> Vec<u8> {
     let mut result = Vec::with_capacity(bytes.len());
     for (a, b) in key.iter().cycle().zip(bytes.iter()) {
         result.push(a ^ b);
