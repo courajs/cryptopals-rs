@@ -25,6 +25,17 @@ fn normalized_hamming_for_keysize(bytes: &[u8], keysize: usize) -> f64 {
     dist as f64 / keysize as f64
 }
 
+fn collate(bytes: &[u8], n: usize) -> Vec<Vec<u8>> {
+    let mut result = Vec::with_capacity(n);
+    for i in 0..n {
+        result.push(Vec::with_capacity((bytes.len() / n) + 1));
+    }
+    for (i, b) in (0..n).cycle().zip(bytes) {
+        result[i].push(*b);
+    }
+    result
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -45,5 +56,19 @@ mod tests {
         let keysizes = rank_keysizes(&vignere);
 
         assert_eq!(keysizes[0], 3);
+    }
+
+    #[test]
+    fn test_collate() {
+        let input = b"hello world!!!";
+        let expected: Vec<Vec<u8>> = vec![
+            b"hw!"[..].into(),
+            b"eo!"[..].into(),
+            b"lr"[..].into(),
+            b"ll"[..].into(),
+            b"od"[..].into(),
+            b" !"[..].into(),
+        ];
+        assert_eq!(collate(input, 6), expected);
     }
 }
