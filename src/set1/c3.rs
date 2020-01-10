@@ -134,8 +134,23 @@ fn byte_xor(s: &[u8], b: u8) -> Vec<u8> {
     s.iter().map(|c| c ^ b).collect()
 }
 
-fn best_score_byte_xor(s: &[u8]) -> String {
-    todo!()
+fn best_score_byte_xor(input: &[u8]) -> String {
+        let mut best_score = std::f64::MAX;
+        let mut result = String::new();
+
+        for c in std::u8::MIN..=std::u8::MAX {
+            let rotated = byte_xor(&input, c);
+            if let Ok(s) = String::from_utf8(rotated) {
+                if let Some(score) = score_text(&s) {
+                    if score < best_score {
+                        best_score = score;
+                        result = String::from(s);
+                    }
+                }
+            }
+        }
+
+        result
 }
 
 #[cfg(test)]
@@ -145,30 +160,7 @@ mod tests {
     #[test]
     fn c3() {
         let input = hex::decode("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736").unwrap();
-
-        let mut results = Vec::new();
-
-        for c in std::u8::MIN..=std::u8::MAX {
-            let rotated = byte_xor(&input, c);
-            if let Ok(s) = String::from_utf8(rotated) {
-                if let Some(score) = score_text(&s) {
-                    dbg!(c, &s);
-                    results.push((score, s));
-                }
-            }
-        }
-
-        // use std::cmp::partial_cmp;
-        results.sort_by(|a,b| {
-            // println!("{}, {}", a.0, b.0);
-            a.0.partial_cmp(&b.0).unwrap()
-        });
-
-        for i in 0..10 {
-            println!("{}: {}", results[i].0, results[i].1);
-        }
-
-        // todo!()
+        assert_eq!(best_score_byte_xor(&input), "Cooking MC's like a pound of bacon");
     }
 
     #[test]
