@@ -134,23 +134,25 @@ fn byte_xor(s: &[u8], b: u8) -> Vec<u8> {
     s.iter().map(|c| c ^ b).collect()
 }
 
-fn best_score_byte_xor(input: &[u8]) -> String {
-        let mut best_score = std::f64::MAX;
-        let mut result = String::new();
+pub fn best_score_byte_xor(input: &[u8]) -> (String, u8, f64) {
+    let mut key = 0;
+    let mut best_score = std::f64::MAX;
+    let mut result = String::new();
 
-        for c in std::u8::MIN..=std::u8::MAX {
-            let rotated = byte_xor(&input, c);
-            if let Ok(s) = String::from_utf8(rotated) {
-                if let Some(score) = score_text(&s) {
-                    if score < best_score {
-                        best_score = score;
-                        result = String::from(s);
-                    }
+    for c in std::u8::MIN..=std::u8::MAX {
+        let rotated = byte_xor(&input, c);
+        if let Ok(s) = String::from_utf8(rotated) {
+            if let Some(score) = score_text(&s) {
+                if score < best_score {
+                    best_score = score;
+                    key = c;
+                    result = String::from(s);
                 }
             }
         }
+    }
 
-        result
+    (result, key, best_score)
 }
 
 #[cfg(test)]
@@ -160,7 +162,7 @@ mod tests {
     #[test]
     fn c3() {
         let input = hex::decode("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736").unwrap();
-        assert_eq!(best_score_byte_xor(&input), "Cooking MC's like a pound of bacon");
+        assert_eq!(best_score_byte_xor(&input).0, "Cooking MC's like a pound of bacon".to_owned());
     }
 
     #[test]
