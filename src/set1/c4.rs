@@ -5,9 +5,12 @@ fn best_score_of_all(inputs: impl Iterator<Item = Vec<u8>>) -> (String, u8, f64)
 
     for l in inputs {
         // println!("hi {}", l);
-        let t = c3::best_score_byte_xor(&l);
-        if t.2 < result.2 {
-            result = t;
+        let mut these = c3::byte_xor_solutions(&l);
+        if these.len() > 0 {
+            let t = these.swap_remove(0);
+            if t.2 < result.2 {
+                result = t;
+            }
         }
         // todo!()
     }

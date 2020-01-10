@@ -58,6 +58,30 @@ mod tests {
     use super::*;
 
     #[test]
+    fn c6() {
+        use std::fs::File;
+        use std::io::BufRead;
+        use std::io::BufReader;
+        use crate::set1::c3;
+
+        let file = File::open("/Users/aaron/dev/cryptopals-rs/src/set1/c6.txt").unwrap();
+        let reader = BufReader::new(file);
+        let input: Vec<u8> = reader.lines().map(Result::unwrap)
+            .map(|v| base64::decode(&v)).map(Result::unwrap)
+            .map(|v| v.into_iter()).flatten().collect();
+
+        let keysizes = rank_keysizes(&input);
+        // dbg!(&keysizes);
+        let chunks = collate(&input, keysizes[0]);
+        let c: Vec<String> = chunks.iter().map(hex::encode).collect();
+        dbg!(c);
+        let guessed_chunks: Vec<String> = chunks.iter().map(|v| c3::best_score_byte_xor(&v).0).collect();
+        dbg!(guessed_chunks);
+        // dbg!(String::from_utf8(interleave(&guessed_chunks)));
+        todo!()
+    }
+
+    #[test]
     fn test_hamming() {
         let a = b"this is a test";
         let b = b"wokka wokka!!!";

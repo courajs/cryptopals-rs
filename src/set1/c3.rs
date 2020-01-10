@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use ordered_float::OrderedFloat;
 
 use lazy_static::lazy_static;
 
@@ -134,7 +135,21 @@ fn byte_xor(s: &[u8], b: u8) -> Vec<u8> {
     s.iter().map(|c| c ^ b).collect()
 }
 
+pub fn byte_xor_solutions(input: &[u8]) -> Vec<(String, u8, f64)> {
+    let mut result: Vec<(String, u8, f64)> = (std::u8::MIN..=std::u8::MAX).filter_map(|c| {
+        let rotated = byte_xor(&input, c);
+        String::from_utf8(rotated).ok().and_then(|s| {
+            score_text(&s).map(|score| (s, c, score))
+        })
+    }).collect();
+
+    result.sort_by_key(|e| OrderedFloat(e.2));
+
+    result
+}
+
 pub fn best_score_byte_xor(input: &[u8]) -> (String, u8, f64) {
+    return byte_xor_solutions(input).swap_remove(0);
     let mut key = 0;
     let mut best_score = std::f64::MAX;
     let mut result = String::new();
@@ -146,7 +161,7 @@ pub fn best_score_byte_xor(input: &[u8]) -> (String, u8, f64) {
                 if score < best_score {
                     best_score = score;
                     key = c;
-                    result = String::from(s);
+                    result = s;
                 }
             }
         }
