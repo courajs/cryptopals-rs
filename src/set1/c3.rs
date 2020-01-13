@@ -150,24 +150,24 @@ pub fn byte_xor_solutions(input: &[u8]) -> Vec<(String, u8, f64)> {
 
 pub fn best_score_byte_xor(input: &[u8]) -> (String, u8, f64) {
     return byte_xor_solutions(input).swap_remove(0);
-    let mut key = 0;
-    let mut best_score = std::f64::MAX;
-    let mut result = String::new();
+    // let mut key = 0;
+    // let mut best_score = std::f64::MAX;
+    // let mut result = String::new();
 
-    for c in std::u8::MIN..=std::u8::MAX {
-        let rotated = byte_xor(&input, c);
-        if let Ok(s) = String::from_utf8(rotated) {
-            if let Some(score) = score_text(&s) {
-                if score < best_score {
-                    best_score = score;
-                    key = c;
-                    result = s;
-                }
-            }
-        }
-    }
+    // for c in std::u8::MIN..=std::u8::MAX {
+    //     let rotated = byte_xor(&input, c);
+    //     if let Ok(s) = String::from_utf8(rotated) {
+    //         if let Some(score) = score_text(&s) {
+    //             if score < best_score {
+    //                 best_score = score;
+    //                 key = c;
+    //                 result = s;
+    //             }
+    //         }
+    //     }
+    // }
 
-    (result, key, best_score)
+    // (result, key, best_score)
 }
 
 #[cfg(test)]

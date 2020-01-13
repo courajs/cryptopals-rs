@@ -12,7 +12,6 @@ fn best_score_of_all(inputs: impl Iterator<Item = Vec<u8>>) -> (String, u8, f64)
                 result = t;
             }
         }
-        // todo!()
     }
 
     result

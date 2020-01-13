@@ -11,18 +11,63 @@ fn hamming(a: &[u8], b: &[u8]) -> usize {
     result
 }
 
-fn rank_keysizes(bytes: &[u8]) -> Vec<usize> {
+fn rank_keysizes(bytes: &[u8]) -> Vec<(usize, f64)> {
     let max = std::cmp::min(40, bytes.len() / 2);
-    let mut result: Vec<usize> = (2usize..=max).collect();
-    result.sort_by_cached_key(|keysize| {
-        OrderedFloat(normalized_hamming_for_keysize(bytes, *keysize as usize))
-    });
+    let mut result: Vec<(usize, f64)> = (2usize..=max).map(|keysize| {
+        (keysize, normalized_hamming_for_keysize(bytes, keysize))
+    }).collect();
+    result.sort_by_key(|(_,score)| OrderedFloat(*score));
+
+    result
+}
+fn rank_keysizes2(bytes: &[u8]) -> Vec<(usize, f64)> {
+    let max = std::cmp::min(40, bytes.len() / 2);
+    let mut result: Vec<(usize, f64)> = (2usize..=max).map(|keysize| {
+        (keysize, normalized_hamming_for_keysize_twice(bytes, keysize))
+    }).collect();
+    result.sort_by_key(|(_,score)| OrderedFloat(*score));
+
     result
 }
 
 fn normalized_hamming_for_keysize(bytes: &[u8], keysize: usize) -> f64 {
     let dist = hamming(&bytes[..keysize], &bytes[keysize..keysize*2]);
-    dist as f64 / keysize as f64
+    (dist as f64) / (keysize as f64)
+}
+
+fn normalized_hamming_for_keysize_twice(bytes: &[u8], keysize: usize) -> f64 {
+    let mut dist = hamming(&bytes[..keysize], &bytes[keysize..keysize*2]) as f64;
+    if bytes.len() >= keysize * 4 {
+        let d2 = hamming(&bytes[keysize*2..keysize*3], &bytes[keysize*3..keysize*4]) as f64;
+        dist = (dist + d2) / 2.0;
+    }
+    dist / keysize as f64
+}
+
+fn many_rank(bytes: &[u8]) -> Vec<(usize, f64)> {
+    let max = std::cmp::min(40, bytes.len() / 2);
+    let mut result: Vec<(usize, f64)> = (2usize..=max).map(|keysize| {
+        (keysize, many_average_normalized_hamming_for_keysize(bytes, keysize))
+    }).collect();
+    result.sort_by_key(|(_,score)| OrderedFloat(*score));
+
+    result
+}
+
+fn many_average_normalized_hamming_for_keysize(bytes: &[u8], keysize: usize) -> f64 {
+    let mut dists = Vec::new();
+    let max = std::cmp::min(20, bytes.len() / (keysize*2));
+    dbg!(bytes.len());
+    dbg!(&max);
+    for n in 0..(max) {
+        dists.push(hamming(&bytes[keysize*n*2..(keysize*n*2)+1], &bytes[(keysize*n*2)+1..(keysize*n*2)+2]));
+    }
+
+    let len = dists.len() as f64;
+    let sum: usize = dists.into_iter().sum();
+    let mean_dist: f64 = sum as f64 / len;
+
+    return mean_dist / keysize as f64;
 }
 
 fn collate(bytes: &[u8], n: usize) -> Vec<Vec<u8>> {
@@ -67,15 +112,18 @@ mod tests {
         let file = File::open("/Users/aaron/dev/cryptopals-rs/src/set1/c6.txt").unwrap();
         let reader = BufReader::new(file);
         let input: Vec<u8> = reader.lines().map(Result::unwrap)
-            .map(|v| base64::decode(&v)).map(Result::unwrap)
+            .map(|v| base64::decode(&v).unwrap())
             .map(|v| v.into_iter()).flatten().collect();
 
-        let keysizes = rank_keysizes(&input);
-        // dbg!(&keysizes);
-        let chunks = collate(&input, keysizes[0]);
+        let keysizes = many_rank(&input);
+        dbg!(&keysizes[..19]);
+        // dbg!(&rank_keysizes2(&input)[..10]);
+        let chunks = collate(&input, 29);
         let c: Vec<String> = chunks.iter().map(hex::encode).collect();
-        dbg!(c);
+        // dbg!(c);
         let guessed_chunks: Vec<String> = chunks.iter().map(|v| c3::best_score_byte_xor(&v).0).collect();
+        dbg!(guessed_chunks.len());
+        dbg!(guessed_chunks[0].len());
         dbg!(guessed_chunks);
         // dbg!(String::from_utf8(interleave(&guessed_chunks)));
         todo!()
@@ -96,7 +144,7 @@ mod tests {
         let vignere = c5::repeating_key_xor(cleartext, b"yes");
         let keysizes = rank_keysizes(&vignere);
 
-        assert_eq!(keysizes[0], 3);
+        assert_eq!(keysizes[0].0, 3);
     }
 
     #[test]
